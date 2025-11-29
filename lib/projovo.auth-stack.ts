@@ -1,4 +1,10 @@
-import { Duration, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import {
+  CfnOutput,
+  Duration,
+  RemovalPolicy,
+  Stack,
+  StackProps,
+} from "aws-cdk-lib";
 import {
   UserPool,
   UserPoolClient,
@@ -13,6 +19,7 @@ import { Construct } from "constructs";
 export class ProjovoAuthStack extends Stack {
   public readonly userPool: UserPool;
   public readonly userPoolClient: UserPoolClient;
+  public readonly identityPool: IdentityPool;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -35,7 +42,7 @@ export class ProjovoAuthStack extends Stack {
         requireLowercase: true,
         requireUppercase: false,
       },
-      removalPolicy: RemovalPolicy.DESTROY, // change to RETAIN in prod
+      removalPolicy: RemovalPolicy.DESTROY, // change to RETAIN in prod,
     });
 
     this.userPoolClient = new UserPoolClient(this, "ProjovoUserPoolClient", {
@@ -59,7 +66,7 @@ export class ProjovoAuthStack extends Stack {
       });
     });
 
-    const identityPool = new IdentityPool(this, "ProjovoIdentityPool", {
+    this.identityPool = new IdentityPool(this, "ProjovoIdentityPool", {
       identityPoolName: "terranexa-dev-projovo-user-pool-client-identity-pool",
       allowUnauthenticatedIdentities: false,
       authenticationProviders: {
@@ -67,6 +74,22 @@ export class ProjovoAuthStack extends Stack {
           new UserPoolAuthenticationProvider({ userPool: this.userPool }),
         ],
       },
+    });
+
+    new CfnOutput(this, "UserPoolId", {
+      value: this.userPool.userPoolId,
+    });
+
+    new CfnOutput(this, "UserPoolClietId", {
+      value: this.userPoolClient.userPoolClientId,
+    });
+
+    new CfnOutput(this, "UserPoolRegion", {
+      value: this.region,
+    });
+
+    new CfnOutput(this, "IdentityPoolId", {
+      value: this.identityPool.identityPoolId,
     });
   }
 }
